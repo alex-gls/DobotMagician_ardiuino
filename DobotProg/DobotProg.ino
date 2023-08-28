@@ -13,7 +13,7 @@ TrackingCamDxl trackingCam(1);
 unsigned long previousMillis = 0; // stores last time cam was updated
 
 bool gripper = true;
-bool homepose = false;
+bool autohome = true;
 
 static uint32_t timer = millis();
 static uint32_t timer2 = millis();
@@ -144,8 +144,28 @@ void InitRAM(void)
   int j = 0;
   int k = 0;
 
-  for (int j = 0; j < row; j++) {
-    for (int i = 0; i < col; i++) { 
+  for (int i = 0; i < col * row; i++) {
+    PointsUp[i].x = X - j * Xminus;
+    PointsUp[i].y = Y - k * Yminus;
+    PointsUp[i].z = -20;
+    PointsUp[i].r = 0;
+    PointsUp[i].ptpMode = MOVJ_XYZ;
+
+    PointsDown[i].x = PointsUp[i].x;
+    PointsDown[i].y = PointsUp[i].y;
+    PointsDown[i].z = -70;
+    PointsDown[i].r = PointsUp[i].r;
+    PointsDown[i].ptpMode = MOVJ_XYZ;
+
+    k++;
+    if (k == col) {
+      j++;
+      k = 0;
+    }
+  }
+
+  /*for (int j = 0; j < row; j++) {
+    for (int i = 0; i < col; i++) {
       PointsUp[i].x = X - j * Xminus;
       PointsUp[i].y = Y - i * Yminus;
       PointsUp[i].z = -20;
@@ -158,7 +178,7 @@ void InitRAM(void)
       PointsDown[i].r = PointsUp[i].r;
       PointsDown[i].ptpMode = MOVJ_XYZ;
     }
-  }
+    }*/
 
   PointTakeUp.x = 275;
   PointTakeUp.y = -150;
@@ -172,7 +192,7 @@ void InitRAM(void)
   PointTakeDown.r = PointTakeUp.r;
   PointTakeDown.ptpMode = MOVJ_XYZ;
 
-  PointDropUp.x = 130;
+  PointDropUp.x = 120;
   PointDropUp.y = -155;
   PointDropUp.z = -20;
   PointDropUp.r = 0;
@@ -212,15 +232,13 @@ void loop()
     Serial.println("");
   }
 
-  if (!homepose) {
+  if (autohome) {
     if (millis() - timer2 > 10000)
     {
-      if (!homepose) {
-        timer2 = millis();
-        goToHome();
-        delay(20000);
-        homepose = true;
-      }
+      timer2 = millis();
+      goToHome();
+      delay(20000);
+      autohome = false;
     }
   }
   else {
@@ -281,7 +299,6 @@ void loop()
         mode2();
       }
     }
-    mode1();
     mode2();
   }
 }
